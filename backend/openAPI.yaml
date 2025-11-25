@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: AI News Companion API
+  version: 0.1.0
+servers:
+  - url: http://localhost:4000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /feed:
+    get:
+      summary: Get summarized feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Array of summary objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Summary"
+  /article/{id}:
+    get:
+      summary: Get article details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Article object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+  /play:
+    post:
+      summary: Request audio generation / play
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                article_id:
+                  type: string
+                voice_preset:
+                  type: string
+                humor_level:
+                  type: integer
+      responses:
+        "200":
+          description: Play request accepted
+components:
+  schemas:
+    Summary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        source:
+          type: string
+        publishedAt:
+          type: string
+        summary:
+          type: string
+        hook:
+          type: string
+        question:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        audio_url:
+          type: string
+        url:
+          type: string
+    Article:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        source:
+          type: string
+        publishedAt:
+          type: string
+        full_text:
+          type: string
+        summary:
+          type: string
+        hook:
+          type: string
+        question:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        audio_url:
+          type: string
+        url:
+          type: string

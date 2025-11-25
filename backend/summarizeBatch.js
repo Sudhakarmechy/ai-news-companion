@@ -61,30 +61,78 @@ ${JSON.stringify(promptArticles)}
 Return ONLY a valid JSON array.
 `;
 
+    // const response = await axios.post(
+    //   "https://api.openai.com/v1/chat/completions",
+    //   {
+    //     model: "gpt-4o-mini",
+    //     messages: [
+    //       { role: "system", content: "You are a helpful news summarizer." },
+    //       { role: "user", content: userPrompt }
+    //     ],
+    //     temperature: 0.3,
+    //   },
+    //   {
+    //     headers: {
+    //       "Authorization": `Bearer ${OPENAI_API_KEY}`,
+    //       "Content-Type": "application/json"
+    //     }
+    //   }
+    // );
+
+    // const text = response.data.choices[0].message.content;
+
     const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${OPENAI_API_KEY}`,
       {
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a helpful news summarizer." },
-          { role: "user", content: userPrompt }
+        contents: [
+          {
+            parts: [
+              {
+                text: userPrompt
+              }
+            ]
+          }
         ],
-        temperature: 0.3,
+        generationConfig: {
+          temperature: 0.3,
+        }
       },
       {
         headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         }
       }
     );
 
-    const text = response.data.choices[0].message.content;
+    const text = response.data.candidates[0].content.parts[0].text;
     console.log("RAW MODEL OUTPUT:\n", text);
+
+
+    //GEMINI CODE//
+const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      text = jsonMatch[0];
+    } else {
+      // Fallback to stripping common markdown wrappers
+      text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```(?:\s*json)?$/, '').trim();
+    }
+
+    //GEMINI CODE//
+
 
     let summaries;
     try {
       summaries = JSON.parse(text);
+      // Ensure it's an array
+      if (!Array.isArray(summaries)) {
+        throw new Error('Parsed output is not an array');
+      }
+      // Validate each item has required fields
+      summaries.forEach((item, index) => {
+        if (!item.id || !item.title_short || !item.summary_80_120 || !item.hook || !item.question || !item.tags) {
+          console.warn(`Warning: Summary item ${index} missing required fields:`, item);
+        }
+      });
     } catch (e) {
       console.error("Failed to parse JSON from model. Saving raw output.");
       summaries = { raw: text };
