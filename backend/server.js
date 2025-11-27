@@ -4,6 +4,11 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { queue  } = require('./queue');
+const { Queue } = require('bullmq');
+
+//const { queue } = createQueue('tts');
+
 
 const app = express();
 app.use(cors());
@@ -95,23 +100,57 @@ app.get('/article/:id', (req, res) => {
   res.json(result);
 });
 
-// POST /play
-// Request body: { article_id, voice_preset, humor_level }
-// This is currently a stub that enqueues/generates audio later. For now it returns a placeholder response.
-app.post('/play', (req, res) => {
-  const { article_id, voice_preset = 'default', humor_level = 3 } = req.body || {};
+// // POST /play
+// // Request body: { article_id, voice_preset, humor_level }
+// // This is currently a stub that enqueues/generates audio later. For now it returns a placeholder response.
+// app.post('/play', (req, res) => {
+//   const { article_id, voice_preset = 'default', humor_level = 3 } = req.body || {};
 
+//   if (!article_id) return res.status(400).json({ error: 'article_id required' });
+
+//   // In production: check DB for existing audio_url, otherwise enqueue TTS job.
+//   // For now: return a pretend "processing" response; client should poll /article/:id for audio_url.
+//   res.json({
+//     status: 'processing',
+//     article_id,
+//     voice_preset,
+//     humor_level,
+//     message: 'TTS generation not implemented yet. This endpoint is a stub for flow testing.'
+//   });
+// });
+
+// inside server.js replace existing /play handler with this:
+//voice preset is voice ID from elevenlabs
+const { runForArticle } = require('./ttsWorker');
+
+app.post('/play', async (req, res) => {
+  const { article_id, voice_preset = '2EiwWnXFnvU5JabPnv8n', humor_level = 3 } = req.body || {};
   if (!article_id) return res.status(400).json({ error: 'article_id required' });
 
-  // In production: check DB for existing audio_url, otherwise enqueue TTS job.
-  // For now: return a pretend "processing" response; client should poll /article/:id for audio_url.
-  res.json({
-    status: 'processing',
-    article_id,
-    voice_preset,
-    humor_level,
-    message: 'TTS generation not implemented yet. This endpoint is a stub for flow testing.'
-  });
+  // check if already has audio
+  const summariesPath = path.join(__dirname, 'summaries.json');
+  let summaries = [];
+  if (fs.existsSync(summariesPath)) {
+    summaries = JSON.parse(fs.readFileSync(summariesPath, 'utf8'));
+  }
+  const existing = summaries.find(x => x.id === article_id && x.audio_url);
+  if (existing) {
+    return res.json({ status: 'ready', audio_url: existing.audio_url });
+  }
+
+  // Enqueue the job with retries and backoff
+  const job = await queue.add(
+    'generate-audio',
+    { articleId: article_id, voicePreset: voice_preset, humorLevel: humor_level },
+    {
+      attempts: 5, // retry up to 5 times
+      backoff: { type: 'exponential', delay: 2000 }, // 2s, 4s, 8s...
+      removeOnComplete: true,
+      removeOnFail: false
+    }
+  );
+
+  res.status(202).json({ status: 'queued', jobId: job.id, message: 'Audio generation queued. Poll /article/:id' });
 });
 
 // Simple admin endpoint to reload data in-memory (dev convenience)
@@ -122,3 +161,5 @@ app.post('/admin/reload', (req, res) => {
 app.listen(PORT, () => {
   console.log(`API server started on http://localhost:${PORT}`);
 });
+
+
