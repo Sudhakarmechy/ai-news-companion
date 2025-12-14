@@ -1,43 +1,10 @@
-// // backend/db/json/articleRepo.js
-// const { createJsonRepo } = require('./baseJsonRepo');
-// const { Article } = require('../../models');
 
-// // we’ll store articles in backend/articles.json
-// const repo = createJsonRepo('articles.json', Article.fromRaw);
-
-// function listByFilter({ country, region, language, category, limit = 50 } = {}) {
-//   let items = repo.list();
-
-//   if (country) items = items.filter(a => a.country === country.toUpperCase());
-//   if (region) items = items.filter(a => a.region === region);
-//   if (language) items = items.filter(a => a.language === language.toLowerCase());
-//   if (category) items = items.filter(a => (a.categories || []).includes(category));
-
-//   items.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
-//   return items.slice(0, limit);
-// }
-
-// function upsertArticle(article) {
-//   return repo.upsert(article);
-// }
-
-// function getArticleById(id) {
-//   return repo.getById(id);
-// }
-
-// module.exports = {
-//   listByFilter,
-//   upsertArticle,
-//   getArticleById,
-// };
-
-
-// backend/db/articleRepo.js
 const fs = require('fs');
 const path = require('path');
 
-const DATA_FILE = path.join(__dirname, '../articles.json');
+const DATA_FILE = path.join(__dirname, 'articles.json');
 
+console.log("🧭 ArticleRepo using file:", DATA_FILE);
 function readAll() {
   if (!fs.existsSync(DATA_FILE)) return [];
   return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -61,7 +28,14 @@ function upsertArticle(article) {
   return true;
 }
 
+function getArticleById(id) {
+  const articles = readAll();
+  return articles.find(a => a.id === id);
+}
+
 module.exports = {
-  upsertArticle,
+    upsertArticle,
   getAll: readAll,
+  getArticleById,
+  DATA_FILE
 };

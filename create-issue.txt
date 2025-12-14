@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+OWNER="Sudhakarmechy"
+REPO="ai-news-companion"
+ASSIGNEE="Sudhakarmechy"
+PROJECT_NUMBER=1   # <-- change this to your actual project number from gh project list
+
+# Create a temporary CSV of tasks (Title|Body|Column)
+cat > tasks.txt << 'EOF'
+Week 0 — Prep|Set up project vision and success metrics.|Week 0 — Prep
+Week 0 — Prep|Create initial architecture & data flow document.|Week 0 — Prep
+Week 0 — Prep|Confirm tools: OpenAI, ElevenLabs, NewsAPI, Pinecone, AWS.|Week 0 — Prep
+
+Week 1 — Ingestion & Summarization|Implement basic RSS/NewsAPI fetcher and store raw JSON.|Week 1 — Ingestion & Summarization
+Week 1 — Ingestion & Summarization|Build article text extractor and deduplication logic.|Week 1 — Ingestion & Summarization
+Week 1 — Ingestion & Summarization|Integrate OpenAI summarization for single article.|Week 1 — Ingestion & Summarization
+Week 1 — Ingestion & Summarization|Implement batch summarization for multiple articles.|Week 1 — Ingestion & Summarization
+Week 1 — Ingestion & Summarization|Set up Postgres schema for articles and summaries.|Week 1 — Ingestion & Summarization
+
+Week 2 — Audio + UI|Integrate ElevenLabs/OpenAI TTS and generate sample audio.|Week 2 — Audio + UI
+Week 2 — Audio + UI|Create minimal React frontend with feed list and audio player.|Week 2 — Audio + UI
+Week 2 — Audio + UI|Connect frontend to backend /feed API.|Week 2 — Audio + UI
+Week 2 — Audio + UI|Add humor slider and voice preset selection in UI.|Week 2 — Audio + UI
+Week 2 — Audio + UI|Implement basic /followup endpoint and UI for text questions.|Week 2 — Audio + UI
+
+Week 3 — Admin + Monetization|Create simple admin dashboard for source health.|Week 3 — Admin + Monetization
+Week 3 — Admin + Monetization|Add logging, Sentry/monitoring skeleton.|Week 3 — Admin + Monetization
+Week 3 — Admin + Monetization|Integrate Stripe/Razorpay test environment for subscriptions.|Week 3 — Admin + Monetization
+Week 3 — Admin + Monetization|Define free vs paid tier behavior in backend.|Week 3 — Admin + Monetization
+
+Week 4 — Launch|Implement beta signup flow and invite a small user group.|Week 4 — Launch
+Week 4 — Launch|Collect feedback and track key metrics (retention, listens).|Week 4 — Launch
+Week 4 — Launch|Polish UI, fix critical bugs, and prepare soft launch.|Week 4 — Launch
+Week 4 — Launch|Write launch README and roadmap for v2 features.|Week 4 — Launch
+EOF
+
+# Get project ID
+PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner "$OWNER" --format json | jq -r '.id')
+
+echo "Using Project ID: $PROJECT_ID"
+
+# Loop through tasks and create issues + add to project
+while IFS='|' read -r TITLE BODY COLUMN; do
+  # Skip empty lines
+  if [[ -z "$TITLE" ]]; then
+    continue
+  fi
+
+  echo "Creating issue: $TITLE"
+
+  ISSUE_URL=$(gh issue create \
+    --repo "$OWNER/$REPO" \
+    --title "$TITLE" \
+    --body "$BODY" \
+    --assignee "$ASSIGNEE" \
+    --label "project" \
+    --json url \
+    --template "" | jq -r '.url')
+
+  ISSUE_NUMBER=$(echo "$ISSUE_URL" | awk -F'/' '{print $NF}')
+
+  echo "  -> Issue #$ISSUE_NUMBER created."
+
+  # Add issue to project
+  ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" \
+    --owner "$OWNER" \
+    --url "$ISSUE_URL" \
+    --format json | jq -r '.id')
+
+  echo "  -> Added to project as item: $ITEM_ID"
+
+done < tasks.txt
+
+echo "Done creating issues and adding to project."

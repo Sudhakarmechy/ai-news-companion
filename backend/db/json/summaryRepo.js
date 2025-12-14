@@ -1,24 +1,39 @@
-// backend/db/json/summaryRepo.js
-const { createJsonRepo } = require('./baseJsonRepo');
-const { Summary } = require('../../models');
+// backend/db/summaryRepo.js
+const fs = require('fs');
+const path = require('path');
 
-// store summaries in backend/summaries_store.json (to not clash with your old file yet)
-const repo = createJsonRepo('summaries_store.json', Summary.fromRaw);
+const DATA_FILE = path.join(__dirname, '../summaries_store.json');
+
+function readAll() {
+  if (!fs.existsSync(DATA_FILE)) return [];
+  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+
+function writeAll(summaries) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(summaries, null, 2));
+}
+
+// Insert or replace
+function upsertSummary(summary) {
+  const summaries = readAll();
+
+  const index = summaries.findIndex(s => s.id === summary.id);
+
+  if (index !== -1) {
+    summaries[index] = summary;
+  } else {
+    summaries.push(summary);
+  }
+
+  writeAll(summaries);
+}
 
 function listByArticle(articleId) {
-  return repo.list(s => s.articleId === String(articleId));
-}
-
-function getById(id) {
-  return repo.getById(id);
-}
-
-function upsertSummary(summary) {
-  return repo.upsert(summary);
+  return readAll().filter(s => s.articleId === articleId);
 }
 
 module.exports = {
-  listByArticle,
-  getById,
   upsertSummary,
+  listByArticle,
+  getAll: readAll
 };

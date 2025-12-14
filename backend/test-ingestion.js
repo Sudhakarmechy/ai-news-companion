@@ -1,12 +1,65 @@
-require('dotenv').config();
+// backend/test-ingestion.js
 
-const { ingestGoogleNews } = require('./services/ingestion/ingestGoogleNews');
+require('dotenv').config();
+const axios = require('axios');
+const xml2js = require('xml2js');
+
+const { publishArticleIngested } = require('./queues/publishers');
+const { articleRepo } = require('./db');
+const { Article } = require('./models');   // IMPORTANT!
+
+const RSS_URL = `https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en`;
+
+async function fetchRSS() {
+  const xml = (await axios.get(RSS_URL)).data;
+
+  const parsed = await xml2js.parseStringPromise(xml, {
+    trim: true,
+    normalizeTags: true,
+    mergeAttrs: true,
+  });
+
+  const items = parsed?.rss?.channel?.[0]?.item || [];
+
+return items.map((i) => ({
+    id:
+      typeof i.guid?.[0] === "object"
+        ? i.guid[0]._                          // FIX: extract string
+        : i.guid?.[0] || i.link?.[0],
+
+    title: i.title?.[0] || "",
+    url: i.link?.[0] || "",
+    link: i.link?.[0] || "",
+    
+    description: i.description?.[0] || "",
+    rawText: i.description?.[0] || "",
+    
+    pubDate: i.pubdate?.[0] || i.pubDate?.[0] || null,
+}));
+
+}
 
 (async () => {
-  try {
-    const count = await ingestGoogleNews({ country: 'IN', language: 'en' });
-    console.log('✅ Ingestion completed, count:', count);
-  } catch (err) {
-    console.error('❌ Ingestion failed:', err.message);
+  console.log("[ingestion] Fetching RSS...");
+
+  const rssArticles = await fetchRSS();
+  console.log(`[ingestion] Found ${rssArticles.length} articles`);
+
+  let count = 0;
+
+  for (const raw of rssArticles) {
+    // CONVERT to our internal model
+    const article = Article.create(raw);
+
+    const inserted = articleRepo.upsertArticle(article);
+
+    if (inserted) {
+      console.log("→ Queuing ARTICLE_INGESTED:", article.id);
+      await publishArticleIngested(article.id);
+      count++;
+    }
   }
+
+  console.log(`[ingestion] Stored & queued ${count} new articles.`);
+  process.exit(0);
 })();

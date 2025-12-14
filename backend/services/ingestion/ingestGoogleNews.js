@@ -8,6 +8,7 @@ const { normalizeArticle } = require('./articleNormalizer');
 const { classifyCategories } = require('./categoryClassifier');
 const { articleRepo } = require('../../db');
 
+
 async function ingestGoogleNews({ country = 'IN', language = 'en' } = {}) {
   console.log(`[ingestion] Starting Google News ingestion for ${country}/${language}`);
 

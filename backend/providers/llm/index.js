@@ -1,5 +1,5 @@
-// backend/providers/llm/index.js
-const providerConfig = require('../../config/providers');
+const config = require('../../config/providers');
+const GeminiProvider = require('./gemini');
 
 function getLLMProvider() {
   switch (config.llm) {

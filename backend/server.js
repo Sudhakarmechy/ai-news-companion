@@ -12,13 +12,22 @@ const { createBullBoard } = require('@bull-board/api');
 const { ExpressAdapter } = require('@bull-board/express');
 const { BullMQAdapter } = require('@bull-board/api/bullMQAdapter'); // BullMQ support
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
 const DATA_DIR = __dirname; // summaries.json and fetchedArticles.json live here
+
+const feedRoutes = require('./routes/feed');
+app.use('/feed', feedRoutes);
+
+ const summaryRoutes = require('./routes/summaries');
+app.use('/summaries', summaryRoutes);
+
+const audioRoutes = require('./routes/audio');
+app.use('/audio', audioRoutes);
+
 
 // simple token-based middleware to protect the monitor UI
 function monitorAuth(req, res, next) {
@@ -79,6 +88,8 @@ app.get('/feed', (req, res) => {
     };
   });
 
+ 
+
   // simple sorting by publishedAt if present (newest first)
   merged.sort((a, b) => {
     if (!a.publishedAt) return 1;
@@ -116,28 +127,7 @@ app.get('/article/:id', (req, res) => {
   res.json(result);
 });
 
-// // POST /play
-// // Request body: { article_id, voice_preset, humor_level }
-// // This is currently a stub that enqueues/generates audio later. For now it returns a placeholder response.
-// app.post('/play', (req, res) => {
-//   const { article_id, voice_preset = 'default', humor_level = 3 } = req.body || {};
 
-//   if (!article_id) return res.status(400).json({ error: 'article_id required' });
-
-//   // In production: check DB for existing audio_url, otherwise enqueue TTS job.
-//   // For now: return a pretend "processing" response; client should poll /article/:id for audio_url.
-//   res.json({
-//     status: 'processing',
-//     article_id,
-//     voice_preset,
-//     humor_level,
-//     message: 'TTS generation not implemented yet. This endpoint is a stub for flow testing.'
-//   });
-// });
-
-// inside server.js replace existing /play handler with this:
-//voice preset is voice ID from elevenlabs
-const { runForArticle } = require('./ttsWorker');
 
 app.post('/play', async (req, res) => {
   const { article_id, voice_preset = null, humor_level = 3, force = false } = req.body || {};
@@ -292,4 +282,6 @@ app.get('/voices', async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch voices', detail: err.message });
   }
 });
+
+
 
