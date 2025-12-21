@@ -32,8 +32,34 @@ function listByArticle(articleId) {
   return readAll().filter(s => s.articleId === articleId);
 }
 
+// ✅ NEW: listAll - returns all summaries with optional filters
+function listAll(filters = {}) {
+  const summaries = readAll();
+  
+  return summaries.filter(summary => {
+    // Filter by articleId
+    if (filters.articleId && summary.articleId !== filters.articleId) return false;
+    
+    // Filter by language
+    if (filters.language && summary.language !== filters.language) return false;
+    
+    // Filter by category (if summary has categories field)
+    if (filters.category && (!summary.categories || !summary.categories.includes(filters.category))) return false;
+    
+    // Filter by date range
+    if (filters.fromDate || filters.toDate) {
+      const summaryDate = new Date(summary.createdAt || summary.updatedAt || 0);
+      if (filters.fromDate && summaryDate < new Date(filters.fromDate)) return false;
+      if (filters.toDate && summaryDate > new Date(filters.toDate)) return false;
+    }
+    
+    return true;
+  });
+}
+
 module.exports = {
   upsertSummary,
   listByArticle,
-  getAll: readAll
+  getAll: readAll,
+  listAll  // ✅ Added listAll
 };

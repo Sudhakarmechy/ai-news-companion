@@ -14,6 +14,7 @@ if (DB_PROVIDER === 'postgres') {
   audioRepo = require('./json/audioRepo');
   userEventRepo = require('./json/userEventRepo');
   userSettingsRepo = require('./json/userSettingsRepo');
+  digestRepo = require('./json/digestRepo');
 }
 
 module.exports = {
@@ -22,7 +23,7 @@ module.exports = {
   audioRepo,
   userEventRepo,
   userSettingsRepo,
-
+  digestRepo,
   // Export models correctly:
   Article,
   Summary,

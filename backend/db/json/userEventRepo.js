@@ -1,23 +1,28 @@
-// backend/db/json/userEventRepo.js
-const { createJsonRepo } = require('./baseJsonRepo');
-const { UserEvent } = require('../../models');
+const fs = require('fs');
+const path = require('path');
 
-// store user events in backend/user_events.json
-const repo = createJsonRepo('user_events.json', UserEvent.fromRaw);
+const FILE = path.join(__dirname, 'user_events.json');
 
-function logEvent(evt) {
-  return repo.upsert(evt);
+function readAll() {
+  if (!fs.existsSync(FILE)) return [];
+  return JSON.parse(fs.readFileSync(FILE, 'utf8'));
 }
 
-// For analytics/personalization
-function listByUser(userId, { limit = 200 } = {}) {
-  const events = repo
-    .list(e => e.userId === String(userId))
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  return events.slice(0, limit);
+function writeAll(events) {
+  fs.writeFileSync(FILE, JSON.stringify(events, null, 2));
+}
+
+function logEvent(event) {
+  const events = readAll();
+  events.push(event);
+  writeAll(events);
+}
+
+function listByUser(userId) {
+  return readAll().filter(e => e.userId === userId);
 }
 
 module.exports = {
   logEvent,
-  listByUser,
+  listByUser
 };

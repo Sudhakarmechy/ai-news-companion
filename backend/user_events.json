@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1766326775075",
+    "userId": "user_123",
+    "type": "article_opened",
+    "articleId": "abc123",
+    "metadata": {},
+    "createdAt": "2025-12-21T14:19:35.078Z"
+  },
+  {
+    "id": "1766327050769",
+    "userId": "user_123",
+    "type": "article_opened",
+    "articleId": "abc123",
+    "metadata": {},
+    "createdAt": "2025-12-21T14:24:10.770Z"
+  },
+  {
+    "id": "1766327065595",
+    "userId": "user_123",
+    "type": "article_opened",
+    "articleId": "abc123",
+    "metadata": {},
+    "createdAt": "2025-12-21T14:24:25.596Z"
+  }
+]

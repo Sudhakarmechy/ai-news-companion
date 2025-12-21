@@ -1,31 +1,32 @@
-// backend/routes/feed.js
 const express = require('express');
 const router = express.Router();
 
+const { coldStartScore } = require('../feed/coldStartScore');
 const { articleRepo, summaryRepo } = require('../db');
+const { track } = require('../db/interactionRepo.js');
+const { userEventRepo, userProfileRepo } = require('../db');
+const { buildUserProfile } = require('../services/preferenceBuilder');
+const { rankFeed } = require('../services/feedRanker');
 
-// GET /feed?limit=20&country=IN&language=en&category=politics
 router.get('/', (req, res) => {
-  const limit = parseInt(req.query.limit || '20', 10);
+  const limit = Math.min(parseInt(req.query.limit || '20', 10), 50);
+  const { cursor, order = 'latest', country, region, language, category, source } = req.query;
 
-  const country = req.query.country?.toUpperCase() || null;
-  const region = req.query.region || null;
-  const language = req.query.language || null;
-  const category = req.query.category || null;
-
-  // 1️⃣ Load repositories
   const articles = articleRepo.getAll();
   const summaries = summaryRepo.getAll();
 
-  // 2️⃣ Index summaries by articleId (fast lookup)
-  const summaryMap = {};
-  summaries.forEach(s => summaryMap[s.articleId] = s);
+  // ✅ Create lookup maps
+  const articleMap = {};
+  articles.forEach(a => { articleMap[a.id] = a; });
 
-  // 3️⃣ Build enriched objects
-  let feed = articles
-    .map(a => {
-      const s = summaryMap[a.id];
-      if (!s) return null;
+  const summaryMap = {};
+  summaries.forEach(s => { summaryMap[s.articleId] = s; });
+
+  // ✅ COLD START RANKING LOGIC (NEW)
+  const enrichedItems = summaries
+    .map(s => {
+      const a = articleMap[s.articleId];
+      if (!a) return null; // Skip if no article
 
       return {
         id: a.id,
@@ -35,33 +36,85 @@ router.get('/', (req, res) => {
         sourceDomain: a.sourceDomain,
         country: a.country,
         region: a.region,
-        language: a.language,
+        language: a.language || s.language,
         categories: a.categories,
         publishedAt: a.publishedAt,
-
         summary: s.text,
         hook: s.hook,
         question: s.question,
         audio_url: s.audio_url || null,
+        // ✅ Cold start scoring
+        score: coldStartScore({ ...a, ...s }, a.language || s.language)
       };
     })
-    .filter(Boolean);
+    .filter(Boolean); // Remove nulls
 
-  // 4️⃣ Optional filters
+  // ✅ Apply filters to ranked items
+  let feed = enrichedItems;
   if (country) feed = feed.filter(f => f.country === country);
   if (region) feed = feed.filter(f => f.region === region);
   if (language) feed = feed.filter(f => f.language === language);
   if (category) feed = feed.filter(f => f.categories?.includes(category));
+  if (source) feed = feed.filter(f => f.source === source);
 
-  // 5️⃣ Sort newest first
+  // ✅ Sort by cold start SCORE first, then recency
   feed.sort((a, b) => {
-    if (!a.publishedAt) return 1;
-    if (!b.publishedAt) return -1;
-    return new Date(b.publishedAt) - new Date(a.publishedAt);
+    // Primary: highest score first
+    if (b.score !== a.score) return b.score - a.score;
+    
+    // Secondary: most recent
+    const da = new Date(a.publishedAt || 0).getTime();
+    const db = new Date(b.publishedAt || 0).getTime();
+    return order === 'oldest' ? da - db : db - da;
   });
 
-  // 6️⃣ Limit
-  res.json(feed.slice(0, limit));
+  // Cursor pagination (by score + time)
+  if (cursor) {
+    const cursorTime = new Date(cursor).getTime();
+    feed = feed.filter(item => {
+      const t = new Date(item.publishedAt || 0).getTime();
+      return order === 'oldest' ? t > cursorTime : t < cursorTime;
+    });
+  }
+
+  const items = feed.slice(0, limit);
+  const last = items[items.length - 1];
+
+  // Track impressions
+  items.forEach(item => {
+    track({
+      userId: req.userId || 'anon',
+      articleId: item.id,
+      action: 'view',
+      category: item.categories?.[0] || 'general',
+      language: item.language || 'en'
+    });
+  });
+
+
+  res.json({
+    items: items.map(({ score, ...item }) => item), // Remove score from response
+    nextCursor: last?.publishedAt || null,
+    hasMore: feed.length > limit
+  });
 });
+
+router.get('/feed', (req, res) => {
+  const userId = req.query.userId || 'anonymous';
+
+  const articles = loadFeedArticles(); // your existing logic
+
+  const events = userEventRepo.listByUser(userId);
+  let profile = userProfileRepo.getProfile(userId);
+
+  if (!profile && events.length > 0) {
+    profile = buildUserProfile(userId, events);
+    userProfileRepo.saveProfile(profile);
+  }
+
+  const ranked = rankFeed(articles, profile);
+  res.json(ranked);
+});
+
 
 module.exports = router;
