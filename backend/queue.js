@@ -11,9 +11,17 @@ const connection = new IORedis(REDIS_URL, {
   enableReadyCheck: false
 });
 
-const QUEUE_NAME = 'tts';
+// ✅ Create multiple queues object for compatibility
+const queues = {
+  tts: new Queue('tts', { connection })
+};
 
-// Create a single shared Queue instance (producer side)
-const queue = new Queue(QUEUE_NAME, { connection });
+// Also export the default queue (named 'tts' for backward compatibility)
+const queue = queues.tts;
 
-module.exports = { queue, connection, QUEUE_NAME };
+module.exports = { 
+  queue, 
+  queues,  // ✅ Added queues export
+  connection, 
+  QUEUE_NAME: 'tts' 
+};

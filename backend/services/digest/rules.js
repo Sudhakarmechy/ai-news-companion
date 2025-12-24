@@ -1,16 +1,16 @@
 const DIGEST_RULES = {
   daily: {
-    freshnessHours: 24,
+    freshnessHours: 148,
     avoidRepeats: true,
     diversify: true
   },
   trending: {
-    freshnessHours: 48,
+    freshnessHours: 148,
     avoidRepeats: false,
     diversify: true
   },
   evening: {
-    freshnessHours: 12,
+    freshnessHours: 112,
     avoidRepeats: true,
     diversify: false
   },

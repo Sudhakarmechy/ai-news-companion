@@ -15,47 +15,88 @@ class GeminiProvider extends LLMProvider {
   }
 
   async summarizeArticle(article, options = {}) {
-    const { mode = "brief", language = "en" } = options;
+    const mode = options.mode || 'brief';
 
-    const prompt = `
-Summarize this news article.
-
-=== ARTICLE TITLE ===
-${article.title}
-
-=== ARTICLE DESCRIPTION ===
-${article.description || ""}
-
-=== SUMMARY STYLE ===
-Mode: ${mode}
-Language: ${language}
-
-Return a JSON object with the following structure:
+    // ✅ FIXED: Build COMPLETE prompt (system + article content)
+    const systemPrompt = mode === 'detailed' ? `
+You are a news explainer.
+Explain the news clearly to a general audience.
+Include:
+- background
+- context  
+- why it matters
+- consequences
+Avoid opinions.
+Return JSON ONLY.
 {
-  "summary": "short description",
-  "hook": "attention-grabbing sentence",
-  "question": "curiosity question about the news"
+  "summary": "...",
+  "hook": "...",
+  "question": "..."  
 }
-    `;
+` : `
+Summarize the news briefly (30–60 seconds).
+Return JSON ONLY.
+{
+  "summary": "...",
+  "hook": "...", 
+  "question": "..."
+}`;
 
-    const result = await this.model.generateContent(prompt);
-    const text = result.response.text();
+    // ✅ FIXED: Define PROMPT with article content
+    const prompt = `
+${systemPrompt}
 
-    const cleaned = text
-  .replace(/```json/gi, '')
-  .replace(/```/g, '')
-  .trim();
+ARTICLE:
+Title: ${article.title}
+Content: ${article.content || article.description || article.rawText || ''}
 
-try {
-  return JSON.parse(cleaned);
-} catch (err) {
-  console.error("[summarizer] Gemini JSON parse failed:", cleaned);
-  return {
-    summary: cleaned,
-    hook: "",
-    question: "",
-  };
-}
+Summarize this article above.
+`;
+
+    try {
+      // ✅ FIXED: Use 'prompt' variable
+      const result = await this.model.generateContent(prompt);
+      const text = result.response.text();
+
+      const cleaned = text
+        .replace(```
+        .replace(```/g, '')
+        .trim();
+
+      // ✅ Better JSON parsing with fallback
+      try {
+        const parsed = JSON.parse(cleaned);
+        return {
+          summary: parsed.summary || cleaned.slice(0, 300),
+          hook: parsed.hook || `${article.title.slice(0, 50)}...`,
+          question: parsed.question || "What do you think about this?",
+          source: 'gemini'
+        };
+      } catch (parseErr) {
+        console.warn("[Gemini] JSON parse failed:", cleaned.slice(0, 100));
+        return {
+          summary: cleaned.slice(0, 300),
+          hook: article.title.slice(0, 50) + '...',
+          question: "What do you think about this news?",
+          source: 'gemini-raw'
+        };
+      }
+    } catch (err) {
+      console.error("[Gemini] Error:", err.message);
+      
+      // ✅ Rate limit + fallback handling
+      if (err.message.includes('429') || err.message.includes('quota')) {
+        console.warn("[Gemini] Rate limited, using fallback");
+        return {
+          summary: (article.description || article.content || '').slice(0, 300) || 'Summary unavailable.',
+          hook: article.title || 'News update',
+          question: 'What do you think about this?',
+          source: 'fallback'
+        };
+      }
+      
+      throw err; // Re-throw other errors
+    }
   }
 }
 

@@ -5,8 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const OPENAI_API_KEY = process.env.GEMINI_API_KEY1;
-
-const USE_MOCK = !OPENAI_API_KEY; // if no key or quota, we mock
+const USE_MOCK = !OPENAI_API_KEY;
 
 function mockSummary(article) {
   return {
@@ -17,6 +16,21 @@ function mockSummary(article) {
     question: "What do you think about this story?",
     tags: ["mock", "dev"],
   };
+}
+
+// ✅ FALLBACK FUNCTIONS - ADDED HERE
+function fallbackSummary(article) {
+  if (article.description) return article.description.slice(0, 300);
+  if (article.rawText) return article.rawText.slice(0, 300);
+  return 'Summary temporarily unavailable.';
+}
+
+function fallbackHook(article) {
+  return article.title || 'Top news update';
+}
+
+function fallbackQuestion(article) {
+  return 'Why is this news important right now?';
 }
 
 async function summarizeArticles() {
@@ -30,7 +44,7 @@ async function summarizeArticles() {
   console.log(`Loaded ${raw.length} articles for summarization.`);
 
   if (USE_MOCK) {
-    console.log("OPENAI_API_KEY missing or quota issue; using mock summaries.");
+    console.log("GEMINI_API_KEY missing; using mock summaries.");
     const summaries = raw.map(mockSummary);
     const outPath = path.join(__dirname, 'summaries.json');
     fs.writeFileSync(outPath, JSON.stringify(summaries, null, 2));
@@ -38,118 +52,151 @@ async function summarizeArticles() {
     return;
   }
 
-  try {
-    const promptArticles = raw.map(a => ({
-      id: a.id,
-      title: a.title,
-      content: a.content || a.description || "",
-    }));
-
-    const userPrompt = `
-You are a factual news summarizer. For each of the following articles, produce:
+  const summaries = [];
+  
+  for (const article of raw) {
+    console.log(`Summarizing article: ${article.title.slice(0, 50)}...`);
+    
+    try {
+      // ✅ NORMAL GEMINI CALL
+      const userPrompt = `
+You are a factual news summarizer. For this article, produce:
 {
-  "id": "...",
-  "title_short": "<10 words max>",
-  "summary_80_120": "<80-120 words, factual>",
+  "summary": "<80-120 words, factual>",
   "hook": "<one witty 6-12 word line>",
-  "question": "<one engaging question>",
-  "tags": ["news","..."]
+  "question": "<one engaging question>"
 }
 
-Articles:
-${JSON.stringify(promptArticles)}
-Return ONLY a valid JSON array.
+Article: ${JSON.stringify({
+  id: article.id,
+  title: article.title,
+  content: article.content || article.description || "",
+})}
+
+Return ONLY valid JSON.
 `;
 
-    // const response = await axios.post(
-    //   "https://api.openai.com/v1/chat/completions",
-    //   {
-    //     model: "gpt-4o-mini",
-    //     messages: [
-    //       { role: "system", content: "You are a helpful news summarizer." },
-    //       { role: "user", content: userPrompt }
-    //     ],
-    //     temperature: 0.3,
-    //   },
-    //   {
-    //     headers: {
-    //       "Authorization": `Bearer ${OPENAI_API_KEY}`,
-    //       "Content-Type": "application/json"
-    //     }
-    //   }
-    // );
+      const response = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${OPENAI_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: userPrompt }] }],
+          generationConfig: { temperature: 0.3 }
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-    // const text = response.data.choices[0].message.content;
-
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${OPENAI_API_KEY}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: userPrompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.3,
-        }
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        }
+      const text = response.data.candidates[0].content.parts[0].text;
+      
+      // ✅ FIXED JSON extraction
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      let result;
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        const cleaned = text.replace(/^``````(?:\s*json)?$/, '').trim();
+        result = JSON.parse(cleaned);
       }
-    );
 
-    const text = response.data.candidates[0].content.parts[0].text;
-    console.log("RAW MODEL OUTPUT:\n", text);
-
-
-    //GEMINI CODE//
-const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      text = jsonMatch[0];
-    } else {
-      // Fallback to stripping common markdown wrappers
-      text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```(?:\s*json)?$/, '').trim();
-    }
-
-    //GEMINI CODE//
-
-
-    let summaries;
-    try {
-      summaries = JSON.parse(text);
-      // Ensure it's an array
-      if (!Array.isArray(summaries)) {
-        throw new Error('Parsed output is not an array');
-      }
-      // Validate each item has required fields
-      summaries.forEach((item, index) => {
-        if (!item.id || !item.title_short || !item.summary_80_120 || !item.hook || !item.question || !item.tags) {
-          console.warn(`Warning: Summary item ${index} missing required fields:`, item);
-        }
+      summaries.push({
+        id: article.id,
+        title: article.title,
+        title_short: article.title.slice(0, 40) + (article.title.length > 40 ? '...' : ''),
+        summary: result.summary,
+        hook: result.hook,
+        question: result.question,
+        tags: ["news", "ai-generated"],
+        source: 'gemini',
+        articleId: article.id
       });
-    } catch (e) {
-      console.error("Failed to parse JSON from model. Saving raw output.");
-      summaries = { raw: text };
+
+    } catch (err) {
+      // ✅ RATE LIMIT HANDLING
+      if (err.response?.status === 429 || err.message.includes('429')) {
+        console.warn('[LLM] Rate limit hit, using fallback summary');
+        
+        summaries.push({
+          id: article.id,
+          title: article.title,
+          title_short: article.title.slice(0, 40) + (article.title.length > 40 ? '...' : ''),
+          summary: fallbackSummary(article),  // ✅ Now defined!
+          hook: fallbackHook(article),
+          question: fallbackQuestion(article),
+          tags: ["news", "fallback"],
+          source: 'fallback',
+          articleId: article.id
+        });
+        continue;
+      }
+
+      // ✅ RETRY LOGIC
+      if (err.response?.data?.error?.details) {
+        const retryInfo = err.response.data.error.details.find(
+          d => d['@type']?.includes('RetryInfo')
+        );
+        if (retryInfo?.retryDelay) {
+          const seconds = parseInt(retryInfo.retryDelay);
+          console.log(`[LLM] Retrying in ${seconds}s...`);
+          await new Promise(r => setTimeout(r, seconds * 1000));
+          
+          // Retry once
+          try {
+            const response = await axios.post(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${OPENAI_API_KEY}`,
+              {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                generationConfig: { temperature: 0.3 }
+              },
+              { headers: { "Content-Type": "application/json" } }
+            );
+            
+            const text = response.data.candidates[0].content.parts[0].text;
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            let result;
+            if (jsonMatch) {
+              result = JSON.parse(jsonMatch[0]);
+            } else {
+              const cleaned = text.replace(/^``````(?:\s*json)?$/, '').trim();
+              result = JSON.parse(cleaned);
+            }
+
+            summaries.push({
+              id: article.id,
+              title: article.title,
+              title_short: article.title.slice(0, 40) + (article.title.length > 40 ? '...' : ''),
+              summary: result.summary,
+              hook: result.hook,
+              question: result.question,
+              tags: ["news", "ai-generated"],
+              source: 'gemini-retry',
+              articleId: article.id
+            });
+            continue;
+          } catch (retryErr) {
+            console.warn('[LLM] Retry failed, using fallback');
+          }
+        }
+      }
+
+      // ✅ FINAL FALLBACK
+      console.error(`Failed to summarize article ${article.id}:`, err.message);
+      summaries.push({
+        id: article.id,
+        title: article.title,
+        title_short: article.title.slice(0, 40) + (article.title.length > 40 ? '...' : ''),
+        summary: fallbackSummary(article),  // ✅ Now defined!
+        hook: fallbackHook(article),
+        question: fallbackQuestion(article),
+        tags: ["news", "fallback"],
+        source: 'fallback',
+        articleId: article.id
+      });
     }
-
-    const outPath = path.join(__dirname, 'summaries.json');
-    fs.writeFileSync(outPath, JSON.stringify(summaries, null, 2));
-    console.log(`Summaries saved to ${outPath}`);
-
-  } catch (err) {
-    console.error("Error from OpenAI:", err.response?.data || err.message);
-    console.log("Falling back to mock summaries.");
-    const summaries = raw.map(mockSummary);
-    const outPath = path.join(__dirname, 'summaries.json');
-    fs.writeFileSync(outPath, JSON.stringify(summaries, null, 2));
-    console.log(`Mock summaries saved to ${outPath}`);
   }
+
+  const outPath = path.join(__dirname, 'summaries.json');
+  fs.writeFileSync(outPath, JSON.stringify(summaries, null, 2));
+  console.log(`✅ ${summaries.length} summaries saved to ${outPath}`);
+  console.log(`Sources: ${summaries.filter(s => s.source === 'gemini' || s.source === 'gemini-retry').length} Gemini, ${summaries.filter(s => s.source === 'fallback').length} fallback`);
 }
 
 summarizeArticles();

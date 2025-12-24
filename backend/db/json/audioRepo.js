@@ -1,24 +1,31 @@
-// backend/db/json/audioRepo.js
-const { createJsonRepo } = require('./baseJsonRepo');
-const { AudioAsset } = require('../../models');
+const fs = require('fs');
+const path = require('path');
 
-// store audio assets in backend/audio_assets.json
-const repo = createJsonRepo('audio_assets.json', AudioAsset.fromRaw);
+const FILE = path.join(__dirname, '../audio_store.json');
 
-function getById(id) {
-  return repo.getById(id);
+function readAll() {
+  if (!fs.existsSync(FILE)) return [];
+  return JSON.parse(fs.readFileSync(FILE, 'utf8'));
 }
 
-function listByArticle(articleId) {
-  return repo.list(a => a.articleId === String(articleId));
+function writeAll(data) {
+  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
 }
 
-function upsertAudio(audio) {
-  return repo.upsert(audio);
+function save(asset) {
+  const all = readAll();
+  all.push(asset);
+  writeAll(all);
+  return asset;
+}
+
+function findBySummaryAndVoice(summaryId, voiceId) {
+  return readAll().find(
+    a => a.summaryId === summaryId && a.voiceId === voiceId
+  );
 }
 
 module.exports = {
-  getById,
-  listByArticle,
-  upsertAudio,
+  save,
+  findBySummaryAndVoice,
 };

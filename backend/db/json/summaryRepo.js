@@ -32,6 +32,11 @@ function listByArticle(articleId) {
   return readAll().filter(s => s.articleId === articleId);
 }
 
+// ✅ NEW: getById - finds single summary by ID
+function getById(id) {
+  return readAll().find(s => s.id === id);
+}
+
 // ✅ NEW: listAll - returns all summaries with optional filters
 function listAll(filters = {}) {
   const summaries = readAll();
@@ -60,6 +65,7 @@ function listAll(filters = {}) {
 module.exports = {
   upsertSummary,
   listByArticle,
+  getById,        // ✅ ADDED: Fixes "summaryRepo.getById is not a function"
   getAll: readAll,
-  listAll  // ✅ Added listAll
+  listAll         // ✅ Added listAll
 };

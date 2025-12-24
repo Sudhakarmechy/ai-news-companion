@@ -27,8 +27,23 @@ function findPublic(type) {
   return readAll().filter(d => d.userId === null && d.type === type);
 }
 
+function findValidDigest({ type, userId, category, ttlMs }) {
+  const now = Date.now();
+  const all = readAll();
+
+  return all.find(d => {
+    if (d.type !== type) return false;
+    if ((d.userId || null) !== (userId || null)) return false;
+    if ((d.context?.category || null) !== (category || null)) return false;
+
+    const age = now - new Date(d.generatedAt).getTime();
+    return age <= ttlMs;
+  });
+}
+
 module.exports = {
   saveDigest,
   findByUser,
   findPublic,
+  findValidDigest,
 };
