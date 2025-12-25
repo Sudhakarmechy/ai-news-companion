@@ -1,10 +1,10 @@
-
 const fs = require('fs');
 const path = require('path');
 
 const DATA_FILE = path.join(__dirname, 'articles.json');
 
 console.log("🧭 ArticleRepo using file:", DATA_FILE);
+
 function readAll() {
   if (!fs.existsSync(DATA_FILE)) return [];
   return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -33,9 +33,15 @@ function getArticleById(id) {
   return articles.find(a => a.id === id);
 }
 
+// ✅ ADDED - fixes feedEngine.js error
+function getById(id) {
+  return getArticleById(id);  // Alias for service compatibility
+}
+
 module.exports = {
-    upsertArticle,
+  upsertArticle,
   getAll: readAll,
   getArticleById,
+  getById,     // ✅ NEW - matches feedEngine.getById() call
   DATA_FILE
 };

@@ -6,5 +6,14 @@
     "articleId": "abc123",
     "metadata": {},
     "createdAt": "2025-12-21T14:27:27.785Z"
+  },
+  {
+    "userId": "u1",
+    "type": "trending",
+    "summaryId": "d5daf22ab938b712939a54e04537df25963b09dc",
+    "articleId": "CBMiqAFBVV95cUxPZU1pdkpNZzNETDh2clRNY3RtMVByQWhJVlpJX0VVWklDWEM2TlpiU2dhZ3NMbl9sazRXV2ZoVGRuRHJ3VjFyY0pHTmFDYldETEFZeTVQN0Mwd2NjVG1VQnJ1VWluNUczRnJqRzR3TVp4NnNkWlpzNmNwcmljb0dhYjhUbXNNMVRnUDg4TmE2MUlDeXJWSGsySlRIekhaMmJKYlB0UnlTZnfSAa4BQVVfeXFMTjNPSlNuUk8zSUprd0ZxWWEyQjM3R044cWw2ZTFFUTZjS1JnMFlUUHBQUlRBWllqbjZFb0haSExiWHh3LUNkSkVnQk9DWUNZcC1yWTYxeXZMenNaM0YyOFgtN3llMHdhdjVZTFhVTTVoUU1lR0VPU3B2WGliQ1Y5ZHQzUndQbmxyYVB0WWNVNEZfeUJHdWhSVWJjMnE2MGphM2pNdmFBbVA0UVdXTS1R",
+    "metadata": {},
+    "createdAt": "2025-12-25T12:48:32.857Z",
+    "timestamp": "2025-12-25T12:48:32.862Z"
   }
 ]

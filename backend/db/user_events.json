@@ -1,0 +1,79 @@
+[
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "a1",
+    "summaryId": "s1",
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T13:44:39.273Z"
+  },
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "a1",
+    "summaryId": "s1",
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T13:51:13.513Z"
+  },
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "CBMiuAJBVV95cUxNMVRvUWNERUpySTloRXFQSWZyc2RZOWc4OUowVUNxTWEzN0lwd0FGVkFyWWNWS2VwRGdvTXRydW9XUklxdXBLMDZTMVlxMzFjOTVXS180dFREczcxeXl0dXRNY3Z6OFQ3cUQxU1UxdE1rajd6a3pKQTBZN2NpNGo3RDNicmdJWmFpQjhyUG12LUZVdGM5NkV6X01aeWtCRzJHbWJuVFh0bE9lVXlIU01qeGpfODBhX0hiM09oazZNbDRwUmsyS2R2NHpFR1dMbVR4S1R5SlRjMmkzZHFPYms3eE5VZVlheHlTM0ViMkhZOWtwYmllTXE1Ni1FZ2I4bmZpLXBtcVJoS0lzTmctaGJWNjNuREtlZEdSR0pmd0NMQ1hydXlHZzdrV01xRWw4QlZIekdhY09WX2s",
+    "summaryId": "7f377f55edc61075246f00883c62202700598ea2",
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T13:59:04.861Z"
+  },
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "CBMiuAJBVV95cUxNMVRvUWNERUpySTloRXFQSWZyc2RZOWc4OUowVUNxTWEzN0lwd0FGVkFyWWNWS2VwRGdvTXRydW9XUklxdXBLMDZTMVlxMzFjOTVXS180dFREczcxeXl0dXRNY3Z6OFQ3cUQxU1UxdE1rajd6a3pKQTBZN2NpNGo3RDNicmdJWmFpQjhyUG12LUZVdGM5NkV6X01aeWtCRzJHbWJuVFh0bE9lVXlIU01qeGpfODBhX0hiM09oazZNbDRwUmsyS2R2NHpFR1dMbVR4S1R5SlRjMmkzZHFPYms3eE5VZVlheHlTM0ViMkhZOWtwYmllTXE1Ni1FZ2I4bmZpLXBtcVJoS0lzTmctaGJWNjNuREtlZEdSR0pmd0NMQ1hydXlHZzdrV01xRWw4QlZIekdhY09WX2s",
+    "summaryId": "7f377f55edc61075246f00883c62202700598ea2",
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T14:00:39.426Z"
+  },
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "<id>",
+    "summaryId": null,
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T14:23:15.455Z"
+  },
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "CBMiqAFBVV95cUxPZU1pdkpNZzNETDh2clRNY3RtMVByQWhJVlpJX0VVWklDWEM2TlpiU2dhZ3NMbl9sazRXV2ZoVGRuRHJ3VjFyY0pHTmFDYldETEFZeTVQN0Mwd2NjVG1VQnJ1VWluNUczRnJqRzR3TVp4NnNkWlpzNmNwcmljb0dhYjhUbXNNMVRnUDg4TmE2MUlDeXJWSGsySlRIekhaMmJKYlB0UnlTZnfSAa4BQVVfeXFMTjNPSlNuUk8zSUprd0ZxWWEyQjM3R044cWw2ZTFFUTZjS1JnMFlUUHBQUlRBWllqbjZFb0haSExiWHh3LUNkSkVnQk9DWUNZcC1yWTYxeXZMenNaM0YyOFgtN3llMHdhdjVZTFhVTTVoUU1lR0VPU3B2WGliQ1Y5ZHQzUndQbmxyYVB0WWNVNEZfeUJHdWhSVWJjMnE2MGphM2pNdmFBbVA0UVdXTS1R",
+    "summaryId": null,
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T14:27:15.362Z"
+  },
+  {
+    "id": "undefined",
+    "userId": "u1",
+    "type": "summary_completed",
+    "articleId": "      CBMi0AFBVV95cUxNQUZuTm5JTUp0TnpVUW92MjRnN2I0LVdabk1sQ3ZqSm91ejJ6Q2w4emYtYnpKX29GMEM1UWl6U0I0ZzJZVV9QVkY3N0xLLWFIOTVyT0tBOUtncXE4OW5MamhmQ1VqMXRfemk5UVptTUlCN1BDWnNUaUJsZEg1UXdWVHBRMTdnbmRDT2tuQkdzeUsyYkxVOFJoM3ZpZnZkaDBNbmZSdXE5aXlJUWoybVppbXozWlp2eXZCOHkyandITjNlX2Y5bG9ERkdVUEI2RG9S",
+    "summaryId": null,
+    "audioId": null,
+    "positionSeconds": null,
+    "meta": {},
+    "createdAt": "2025-12-25T14:33:12.248Z"
+  }
+]

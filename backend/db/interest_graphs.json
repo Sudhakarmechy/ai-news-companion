@@ -1,0 +1,15 @@
+[
+  {
+    "userId": "u1",
+    "interests": {
+      "in": 4,
+      "en": 6,
+      "news.google.com": 4,
+      "ai": 4,
+      "election": 2,
+      "IN": 2,
+      "government": 2
+    },
+    "updatedAt": "2025-12-25T14:33:12.358Z"
+  }
+]

@@ -8,7 +8,7 @@ const { track } = require('../db/interactionRepo.js');
 const { userEventRepo, userProfileRepo } = require('../db');
 const { buildUserProfile } = require('../services/preferenceBuilder');
 const { rankFeed } = require('../services/feedRanker');
-const { getFeed } = require('../services/feed/feedEngine');
+const { getFeed } = require('../feed/feedEngine');
 
 router.get('/', async (req, res) => {
   const {

@@ -7,13 +7,14 @@ const { Article, Summary } = require('../models');
 let articleRepo, summaryRepo, audioRepo, userEventRepo, userSettingsRepo;
 
 if (DB_PROVIDER === 'postgres') {
-  throw new Error('Postgres provider not implemented yet. Set DB_PROVIDER=json for now.');
+  throw new Error('Postgres provider not implemented yet');
 } else {
   articleRepo = require('./json/articleRepo');
   summaryRepo = require('./json/summaryRepo');
   audioRepo = require('./json/audioRepo');
   userEventRepo = require('./json/userEventRepo');
   userSettingsRepo = require('./json/userSettingsRepo');
+  interestGraphRepo = require('./json/interestGraphRepo'); // ✅ FIX
   digestRepo = require('./json/digestRepo');
 }
 
@@ -24,6 +25,7 @@ module.exports = {
   userEventRepo,
   userSettingsRepo,
   digestRepo,
+  interestGraphRepo,
   // Export models correctly:
   Article,
   Summary,
