@@ -59,8 +59,8 @@ Summarize this article above.
       const text = result.response.text();
 
       const cleaned = text
-        .replace(```
-        .replace(```/g, '')
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
         .trim();
 
       // ✅ Better JSON parsing with fallback

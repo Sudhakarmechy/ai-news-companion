@@ -14,7 +14,8 @@ export default function Feed() {
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/feed?limit=20`);
-      setItems(res.data || []);
+      const payload = res.data;
+      setItems(Array.isArray(payload) ? payload : (payload?.items || []));
     } catch (err) {
       console.error("Failed to fetch feed", err);
       setItems([]);

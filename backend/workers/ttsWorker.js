@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Worker } = require('bullmq');
 const path = require('path');
+const EVENTS = require('../queues/events');
 
 // ✅ File-based repos
 const summaryRepo = require('../db/json/summaryRepo');
@@ -29,8 +30,8 @@ console.log('🔊 TTS Worker started');
 const worker = new Worker('tts', async (job) => {
   console.log(`[tts] Job received: ${job.name} →`, job.data);
   
-  if (job.name !== 'audio-requested') {
-    console.log(`[tts] Skipping job ${job.name} (expected audio-requested)`);
+  if (job.name !== EVENTS.AUDIO_REQUESTED && job.name !== 'audio-requested') {
+    console.log(`[tts] Skipping job ${job.name} (expected ${EVENTS.AUDIO_REQUESTED})`);
     return;
   }
 

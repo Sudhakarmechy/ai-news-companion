@@ -1,5 +1,6 @@
 // backend/providers/tts/index.js
-const providerConfig = require('../../config/providers');
+const config = require('../../config/providers');
+const ElevenLabsProvider = require('./elevenlabs');
 
 function getTTSProvider() {
   switch (config.tts) {

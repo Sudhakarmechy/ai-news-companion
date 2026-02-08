@@ -118,8 +118,6 @@ export default function ArticleModal({ item, onClose, onDone }) {
   </div>
 </div>
 
-     </label>
-
             <label>Humor:
               <input type="range" min="0" max="10" value={humor} onChange={e => setHumor(Number(e.target.value))} />
               <span>{humor}</span>

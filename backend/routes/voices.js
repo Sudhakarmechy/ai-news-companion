@@ -6,7 +6,7 @@ const path = require('path');
 const router = express.Router();
 
 const VOICES_CACHE = path.join(__dirname, '../voices.json');
-const ELEVEN_API_KEY = process.env.ELEVEN_API_KEY;
+const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_API_KEY;
 
 /**
  * GET /voices
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   try {
     if (!ELEVEN_API_KEY) {
       return res.status(500).json({
-        error: 'ELEVEN_API_KEY not configured'
+        error: 'ELEVENLABS_API_KEY (or ELEVEN_API_KEY) not configured'
       });
     }
 
