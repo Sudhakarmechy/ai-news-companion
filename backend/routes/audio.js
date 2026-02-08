@@ -24,8 +24,8 @@ router.post('/request', async (req, res) => {
     // if audio already exists and params match
     if (summary.audio_url && !force) {
       const meta = summary.generated_with || {};
-      const sameVoice = meta.voiceId === voiceId;
-      const sameHumor = meta.humorLevel === humorLevel;
+      const sameVoice = (meta.voiceId || meta.voice_id || null) === voiceId;
+      const sameHumor = Number(meta.humorLevel ?? meta.humor_level ?? -1) === Number(humorLevel);
 
       if (sameVoice && sameHumor) {
         return res.json({ ok: true, status: "ready", audio_url: summary.audio_url });
