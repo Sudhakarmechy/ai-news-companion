@@ -2,14 +2,36 @@
   {
     "userId": "u1",
     "interests": {
-      "in": 4,
-      "en": 6,
-      "news.google.com": 4,
-      "ai": 4,
-      "election": 2,
-      "IN": 2,
-      "government": 2
+      "sports": {
+        "score": 0.45,
+        "updatedAt": "2025-12-27T14:50:08.319Z",
+        "lastEvents": [
+          {
+            "articleId": null,
+            "delta": 0.22500000000000003,
+            "at": "2025-12-27T14:50:08.320Z"
+          }
+        ]
+      },
+      "technology": {
+        "score": -1,
+        "updatedAt": "2025-12-27T14:51:12.627Z",
+        "lastEvents": [
+          {
+            "articleId": null,
+            "delta": 0.22500000000000003,
+            "at": "2025-12-27T14:51:12.627Z"
+          },
+          {
+            "articleId": null,
+            "delta": 0.22500000000000003,
+            "at": "2025-12-27T14:50:45.557Z"
+          }
+        ],
+        "blockedUntil": 1767451872627
+      }
     },
-    "updatedAt": "2025-12-25T14:33:12.358Z"
+    "createdAt": "2025-12-27T14:28:55.316Z",
+    "updatedAt": "2025-12-27T14:51:12.628Z"
   }
 ]

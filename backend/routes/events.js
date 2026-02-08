@@ -2,27 +2,24 @@ const express = require('express');
 const router = express.Router();
 
 const { createUserEvent } = require('../models/userEvent');
-const { userEventRepo } = require('../db');
-
-const { updateInterestGraph } = require('../services/interest/interestBuilder');
-const { summaryRepo, articleRepo } = require('../db');
+const { userEventRepo, summaryRepo, articleRepo } = require('../db');
+const { updateInterestGraph } = require('../services/interest/interestService');
 
 router.post('/', async (req, res) => {
   const {
     userId,
-    type,
+    type,        // e.g. 'view', 'play'
     summaryId,
     articleId,
-    metadata
+    metadata = {}
   } = req.body;
 
   if (!userId || !type) {
-    return res.status(400).json({
-      error: 'userId and type are required'
-    });
+    return res.status(400).json({ error: 'userId and type are required' });
   }
 
-  const event = createUserEvent({
+  // 1️⃣ Save raw event
+  const userEvent = createUserEvent({
     userId,
     type,
     summaryId,
@@ -30,17 +27,22 @@ router.post('/', async (req, res) => {
     metadata
   });
 
-  userEventRepo.save(event);
+  userEventRepo.save(userEvent);
 
+  // 2️⃣ Resolve article + category
   const summary = summaryId ? summaryRepo.getById(summaryId) : null;
-const article = articleId ? articleRepo.getArticleById(articleId) : null;
+  const article = articleId ? articleRepo.getById(articleId) : null;
 
-await updateInterestGraph({
-  userId,
-  event,
-  summary,
-  article
-});
+  // 3️⃣ NORMALIZED interest event ✅
+  await updateInterestGraph({
+    userId,
+    action: type,                                 // 👈 REQUIRED
+    category:
+      metadata.category ||
+      article?.categories?.[0] ||
+      summary?.category ||
+      'general'
+  });
 
   res.json({ status: 'ok' });
 });

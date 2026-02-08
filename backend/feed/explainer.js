@@ -1,39 +1,39 @@
-function explainSummary({
-  summary,
-  interestGraph,
-  isColdUser
-}) {
+function explainSummary({ summary, interestGraph, isColdUser }) {
   const reasons = [];
 
-  // 1️⃣ Interest-based
-  if (interestGraph?.interests) {
-    const tags = summary.category || [];
-    tags.forEach(tag => {
-      if (interestGraph.interests[tag]) {
-        reasons.push(`Because you follow ${tag}`);
-      }
-    });
+  // 1️⃣ Interest-based explanation
+  if (!isColdUser && interestGraph?.interests) {
+    const interests = Object.entries(interestGraph.interests)
+      .sort((a, b) => b[1].score - a[1].score)
+      .map(([k]) => k.toLowerCase());
+
+    const matched = summary.categories?.find(c =>
+      interests.includes(c.toLowerCase())
+    );
+
+    if (matched) {
+      reasons.push(`You often read ${matched} news`);
+    }
   }
 
-  // 2️⃣ Freshness
+  // 2️⃣ Category fallback
+  if (reasons.length === 0 && summary.category) {
+    reasons.push(`Popular in ${summary.category}`);
+  }
+
+  // 3️⃣ Freshness explanation
   if (summary.freshness === 'just_now') {
-    reasons.push('Breaking news');
+    reasons.push('Just published');
   } else if (summary.freshness === 'today') {
-    reasons.push('Happening today');
-  }
-
-  // 3️⃣ Location
-  if (summary.country) {
-    reasons.push(`Popular in ${summary.country}`);
+    reasons.push('Trending today');
   }
 
   // 4️⃣ Cold start fallback
-  if (isColdUser) {
-    reasons.push('Trending right now');
+  if (reasons.length === 0) {
+    reasons.push('Recommended for you');
   }
 
-  // Safety limit
-  return reasons.slice(0, 2);
+  return reasons.slice(0, 3);
 }
 
 module.exports = { explainSummary };
