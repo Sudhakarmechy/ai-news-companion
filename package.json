@@ -1,0 +1,19 @@
+{
+  "name": "ai-news-companion-platform",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @anc/web & npm run dev -w @anc/api",
+    "build": "npm run build -w @anc/shared && npm run build -w @anc/api && npm run build -w @anc/web",
+    "lint": "npm run lint -w @anc/shared && npm run lint -w @anc/api && npm run lint -w @anc/web",
+    "test": "npm run test -w @anc/shared && npm run test -w @anc/api && npm run test -w @anc/web",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
+}
