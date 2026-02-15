@@ -3,7 +3,11 @@ import { FeedResponse } from '../models/types';
 import { NewsRepository } from '../repositories/newsRepository';
 
 export class FeedService {
-  constructor(private readonly newsRepository = new NewsRepository()) {}
+  private readonly newsRepository: NewsRepository;
+
+  constructor(newsRepository?: NewsRepository) {
+    this.newsRepository = newsRepository ?? new NewsRepository();
+  }
 
   async buildPersonalizedQueue(categories: string[], region: string, playedIds: string[]): Promise<FeedResponse> {
     const base = await this.newsRepository.getByPreferences(categories, region);

@@ -2,7 +2,11 @@ import { UserPreferences } from '@anc/shared';
 import { UserRepository } from '../repositories/userRepository';
 
 export class PersonalizationService {
-  constructor(private readonly userRepository = new UserRepository()) {}
+  private readonly userRepository: UserRepository;
+
+  constructor(userRepository?: UserRepository) {
+    this.userRepository = userRepository ?? new UserRepository();
+  }
 
   getPreferences(userId: string) {
     return this.userRepository.getPreferences(userId);
